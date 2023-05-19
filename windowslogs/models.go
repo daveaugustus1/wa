@@ -1,8 +1,9 @@
 package windowslogs
 
 type Logs struct {
-	SecurityLogs    []Log
-	ApplicationLogs []Log
+	SecurityLogs    []Log  `json:"security_logs"`
+	ApplicationLogs []Log  `json:"application_logs"`
+	HostIP          string `json:"hostIP"`
 }
 
 type Log struct {

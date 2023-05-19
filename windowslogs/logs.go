@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/Expand-My-Business/go_windows_agent/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,9 +21,15 @@ func GetSystemLogs() ([]byte, error) {
 		logrus.Errorf("cannot get application log, error: %v", err)
 	}
 
+	addr1, err := utils.GetPrivateIPAddress()
+	if err != nil {
+		logrus.Errorf("cannot get ip address: %+v", err)
+	}
+
 	logs := Logs{
 		SecurityLogs:    secLogs,
 		ApplicationLogs: appLogs,
+		HostIP:          addr1,
 	}
 	bx, err := json.MarshalIndent(logs, "", "\t")
 	// ioutil.WriteFile("alllogs.json", bx, 0777)
