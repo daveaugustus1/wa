@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -72,4 +74,16 @@ func GetMacAddresses() (string, error) {
 
 	fmt.Println("MAC address not found")
 	return "", errors.New("MAC address not found")
+}
+
+func GetGoAgenHash(binaryPath string) (string, error) {
+	data, err := ioutil.ReadFile(binaryPath)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(data)
+	hashString := hex.EncodeToString(hash[:])
+
+	return hashString, nil
 }
