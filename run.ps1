@@ -1,4 +1,3 @@
-
 # Set the current working directory to the location of the script
 Set-Location $PSScriptRoot
 
@@ -28,9 +27,11 @@ $binaryPath = Join-Path $PSScriptRoot "main.exe"
 $companyCode = Read-Host "Enter the company code"
 
 # Check if the service exists
-if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+$existingService = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+
+if ($existingService) {
     # Stop the service if it's running
-    if ((Get-Service -Name $serviceName).Status -eq "Running") {
+    if ($existingService.Status -eq "Running") {
         Stop-Service -Name $serviceName
     }
 
@@ -43,8 +44,17 @@ if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
 Write-Host "Creating the '$displayName' service, pointing to executable '$binaryPath' with company code '$companyCode'"
 New-Service -Name $serviceName -BinaryPathName "$binaryPath -companycode $companyCode" -DisplayName $displayName -Description $description -StartupType Automatic
 
+# Configure service recovery options
+$failureActions = @"
+    <sc.exe path> failure "$serviceName" reset= 86400 actions= restart/0
+"@
+
+$failureActionsPath = Join-Path $PSScriptRoot "failureactions.txt"
+$failureActions | Out-File -FilePath $failureActionsPath -Encoding ASCII
+
+& sc.exe failure $serviceName reset= 86400 actions= restart/0
+& sc.exe failureflag $serviceName 1
+
 # Start the service
 Write-Host "Starting the '$displayName' service..."
 Start-Service -Name $serviceName
-
-

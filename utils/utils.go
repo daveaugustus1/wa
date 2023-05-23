@@ -3,14 +3,11 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 func GetPrivateIPAddress() (string, error) {
@@ -44,11 +41,12 @@ func GetPublicIP() (string, error) {
 	return string(ip), nil
 }
 
-func GetMacAddresses() (string, error) {
+func GetMacAddresses() ([]string, error) {
+	var macAddresses []string
+
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		logrus.Errorf("cannot check N/W interface, error: %v", err)
-		return "", err
+		return nil, err
 	}
 
 	for _, iface := range interfaces {
@@ -59,21 +57,22 @@ func GetMacAddresses() (string, error) {
 
 		addrs, err := iface.Addrs()
 		if err != nil {
-			logrus.Errorf("cannot get unicast interface, error: %v", err)
-			return "", err
+			return nil, err
 		}
 
 		for _, addr := range addrs {
-			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() == nil {
 				hwAddr := iface.HardwareAddr
-				logrus.Infof("MAC address: %s\n", hwAddr.String())
-				return hwAddr.String(), nil
+				macAddresses = append(macAddresses, hwAddr.String())
 			}
 		}
 	}
 
-	fmt.Println("MAC address not found")
-	return "", errors.New("MAC address not found")
+	if len(macAddresses) == 0 {
+		return nil, fmt.Errorf("MAC addresses not found")
+	}
+
+	return macAddresses, nil
 }
 
 func GetGoAgenHash(binaryPath string) (string, error) {
