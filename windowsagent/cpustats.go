@@ -2,6 +2,7 @@ package windowsagent
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net"
 
 	"github.com/Expand-My-Business/go_windows_agent/utils"
@@ -14,9 +15,9 @@ import (
 )
 
 type Addr struct {
-	MacAddr   string `json:"mac_address"`
-	PublicIp  string `json:"public_ip"`
-	PrivateIp string `json:"private_ip"`
+	MacAddr   []string `json:"mac_addresses"`
+	PublicIp  string   `json:"public_ip"`
+	PrivateIp string   `json:"private_ip"`
 }
 
 type Stats struct {
@@ -89,9 +90,9 @@ func GetWindowsStats() ([]byte, error) {
 		return nil, err
 	}
 
-	// if err := ioutil.WriteFile("address.json", windowsByteSlice, 0777); err != nil {
-	// 	logrus.Errorf("cannot write address.json, error: %+v", err)
-	// }
+	if err := ioutil.WriteFile("address.json", windowsByteSlice, 0777); err != nil {
+		logrus.Errorf("cannot write address.json, error: %+v", err)
+	}
 	return windowsByteSlice, nil
 
 }
