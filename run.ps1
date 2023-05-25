@@ -1,6 +1,23 @@
 # Set the current working directory to the location of the script
 Set-Location $PSScriptRoot
 
+# Move config.toml to C:\Program Files\GoAgent\config\config.toml
+$destinationDir = "C:\Program Files\GoAgent\config"
+$destinationFile = Join-Path $destinationDir "config.toml"
+
+# Create the destination directory if it doesn't exist
+if (-not (Test-Path -Path $destinationDir)) {
+    New-Item -ItemType Directory -Path $destinationDir | Out-Null
+}
+
+# Copy and overwrite the config.toml file
+Copy-Item -Path ".\config.toml" -Destination $destinationFile -Force
+
+Write-Host "config.toml has been moved to '$destinationFile'."
+
+
+
+
 # Check if main.exe exists in the current directory
 if (Test-Path -Path ".\main.exe") {
     # If it does, ask the user if they want to rebuild
