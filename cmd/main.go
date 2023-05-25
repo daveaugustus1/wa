@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
+
+	toml "github.com/pelletier/go-toml"
 
 	"github.com/Expand-My-Business/go_windows_agent/netstat"
 	"github.com/Expand-My-Business/go_windows_agent/nmap"
@@ -17,6 +19,12 @@ import (
 )
 
 var companyCode string
+
+type Config struct {
+	Organization struct {
+		Code string `toml:"code"`
+	} `toml:"organization"`
+}
 
 type Message struct {
 	data []byte
@@ -193,8 +201,22 @@ func (m *myService) run() {
 }
 
 func init() {
-	flag.StringVar(&companyCode, "companycode", "", "Company code")
-	flag.Parse()
+	// Read the TOML file
+	data, err := ioutil.ReadFile(`C:\Program Files\GoAgent\config\config.toml`)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		os.Exit(1)
+	}
+
+	// Parse the TOML data into a Config struct
+	var config Config
+	err = toml.Unmarshal(data, &config)
+	if err != nil {
+		fmt.Println("Error parsing TOML:", err)
+		os.Exit(1)
+	}
+
+	companyCode = config.Organization.Code
 }
 
 func main() {

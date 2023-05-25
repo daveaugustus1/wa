@@ -20,6 +20,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/mattn/go-colorable v0.1.13
+	github.com/pelletier/go-toml v1.9.5
 	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect

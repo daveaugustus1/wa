@@ -23,9 +23,6 @@ $displayName = "GoAgent"
 $description = "My custom service"
 $binaryPath = Join-Path $PSScriptRoot "main.exe"
 
-# Prompt for the company code
-$companyCode = Read-Host "Enter the company code"
-
 # Check if the service exists
 $existingService = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 
@@ -41,8 +38,8 @@ if ($existingService) {
 }
 
 # The service does not exist, so create it
-Write-Host "Creating the '$displayName' service, pointing to executable '$binaryPath' with company code '$companyCode'"
-New-Service -Name $serviceName -BinaryPathName "$binaryPath -companycode $companyCode" -DisplayName $displayName -Description $description -StartupType Automatic
+Write-Host "Creating the '$displayName' service, pointing to executable '$binaryPath'"
+New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName $displayName -Description $description -StartupType Automatic
 
 # Configure service recovery options
 $failureActions = @"
