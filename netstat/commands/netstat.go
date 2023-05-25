@@ -1,9 +1,12 @@
 package commands
 
 import (
+	"crypto/sha256"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -29,6 +32,7 @@ type NetstatB struct {
 	State          string `json:"state"`
 	ProcessName    string `json:"process_name"`
 }
+
 type Process struct {
 	ImageName   string
 	PID         int
@@ -39,6 +43,7 @@ type Process struct {
 	UserName    string
 	CPUTime     string
 	WindowTitle string
+	Hash        string
 }
 
 func GetNetstatA() ([]NetstatA, error) {
@@ -143,17 +148,19 @@ func GetAllInternalProcess() ([]Process, error) {
 		logrus.Errorf("cannot run task command, error: %v", err)
 		return nil, err
 	}
+
 	reader := csv.NewReader(strings.NewReader(string(output)))
 	records, err := reader.ReadAll()
 	if err != nil {
 		logrus.Errorf("cannot read tasklist output, error: %v", err)
 		return nil, err
 	}
+
 	processes := make([]Process, len(records)-1)
 	for i, record := range records[1:] {
 		pid, _ := strconv.Atoi(record[1])
 		sessionNum, _ := strconv.Atoi(record[3])
-		processes[i] = Process{
+		process := Process{
 			ImageName:   record[0],
 			PID:         pid,
 			SessionName: record[2],
@@ -164,14 +171,37 @@ func GetAllInternalProcess() ([]Process, error) {
 			CPUTime:     record[7],
 			WindowTitle: record[8],
 		}
+		process.Hash = calculateProcessHash(process)
+		processes[i] = process
 	}
 
-	// processesByte, err := json.MarshalIndent(processes, "", "\t")
-	// if err != nil {
-	// 	logrus.Errorf("cannot unmarshal unmarshal processes, error: %v", err)
-	// 	return nil, err
-	// }
-	// ioutil.WriteFile("allinternalprocess.json", processesByte, 0777)
+	// Write processes to a JSON file
+	file, err := os.Create("allinternalprocess.json")
+	if err != nil {
+		logrus.Errorf("cannot create JSON file, error: %v", err)
+		return nil, err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(processes); err != nil {
+		logrus.Errorf("cannot encode processes to JSON, error: %v", err)
+		return nil, err
+	}
 
 	return processes, nil
+}
+
+func calculateProcessHash(process Process) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(process.ImageName))
+	hasher.Write([]byte(strconv.Itoa(process.PID)))
+	hasher.Write([]byte(process.SessionName))
+	hasher.Write([]byte(strconv.Itoa(process.SessionNum)))
+	hasher.Write([]byte(process.MemUsage))
+	hasher.Write([]byte(process.Status))
+	hasher.Write([]byte(process.UserName))
+	hasher.Write([]byte(process.CPUTime))
+	hasher.Write([]byte(process.WindowTitle))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
