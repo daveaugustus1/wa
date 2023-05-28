@@ -38,7 +38,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.GetNmapDetails("127.0.0.1", "1-65000")
+			nmapXbyte, err := nmap.NmapDataCmd()
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
@@ -178,7 +178,7 @@ func (m *myService) run() {
 	output := make(chan Message)
 
 	// Start the goroutines
-	// go routineANmap("http://13.235.66.99/agent_ports_data", output, nil)
+	go routineANmap("http://13.235.66.99/agent_ports_data", output, nil)
 	go routineBWindows("http://13.235.66.99/add_agent_logs", output, nil)
 	go routineCNetStat("http://13.235.66.99/agent_process_data", output, nil)
 	go routineWinLogs("http://13.235.66.99/agent_system_logs_data", output, nil)
