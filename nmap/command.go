@@ -6,8 +6,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Expand-My-Business/go_windows_agent/utils"
 	"github.com/sirupsen/logrus"
 )
+
+type NmapStat struct {
+	Ports  []Port `json:"sys_ports"`
+	HostIP string `json:"hostIP"`
+}
 
 type Port struct {
 	PortID    int    `json:"port_id"`
@@ -39,7 +45,7 @@ func NmapDataCmd() ([]byte, error) {
 	return data, err
 }
 
-func parseNmapOutput(output []byte) []Port {
+func parseNmapOutput(output []byte) NmapStat {
 	var ports []Port
 
 	lines := strings.Split(string(output), "\n")
@@ -75,5 +81,13 @@ func parseNmapOutput(output []byte) []Port {
 		}
 	}
 
-	return ports
+	addr1, err := utils.GetPrivateIPAddress()
+	if err != nil {
+		logrus.Errorf("cannot get ip address: %+v", err)
+	}
+
+	return NmapStat{
+		Ports:  ports,
+		HostIP: addr1,
+	}
 }

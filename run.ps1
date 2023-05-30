@@ -1,3 +1,13 @@
+# Check if Chocolatey is installed
+if (!(Get-Command "choco.exe" -ErrorAction SilentlyContinue)) {
+    # Install Chocolatey
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+}
+
+# Install Nmap using Chocolatey
+choco install nmap -y --force
+
 # Set the current working directory to the location of the script
 Set-Location $PSScriptRoot
 
