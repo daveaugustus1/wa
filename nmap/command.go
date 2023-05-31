@@ -21,6 +21,7 @@ type Port struct {
 	Service   string `json:"service"`
 	Version   string `json:"version"`
 	ExtraInfo string `json:"extra_info"`
+	OSType    string `json:"os_type"`
 }
 
 func NmapDataCmd() ([]byte, error) {
@@ -40,7 +41,7 @@ func NmapDataCmd() ([]byte, error) {
 		logrus.Errorf("Failed to marshal nmap data: %v", err)
 		return nil, err
 	}
-
+	// ioutil.WriteFile("nmap111.json", data, 0777)
 	logrus.Infof("Nmap results have been saved to nmap_results.json")
 	return data, err
 }
@@ -75,6 +76,7 @@ func parseNmapOutput(output []byte) NmapStat {
 				Service:   service,
 				Version:   version,
 				ExtraInfo: extraInfo,
+				OSType:    "Windows", // Set the value of the osType field as needed
 			}
 
 			ports = append(ports, port)
