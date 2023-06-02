@@ -8,6 +8,9 @@ if (!(Get-Command "choco.exe" -ErrorAction SilentlyContinue)) {
 # Install Nmap using Chocolatey
 choco install nmap -y --force
 
+# Refresh PowerShell session
+powershell.exe -Command "exit"
+
 # Set the current working directory to the location of the script
 Set-Location $PSScriptRoot
 
