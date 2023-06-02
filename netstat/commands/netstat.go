@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
+	"github.com/shirou/gopsutil/process"
 	"github.com/sirupsen/logrus"
 )
 
@@ -43,6 +43,7 @@ type Process struct {
 	UserName    string
 	CPUTime     string
 	WindowTitle string
+	ExePath     string
 	Hash        string
 }
 
@@ -170,38 +171,47 @@ func GetAllInternalProcess() ([]Process, error) {
 			UserName:    record[6],
 			CPUTime:     record[7],
 			WindowTitle: record[8],
+			ExePath:     getProcessExePath(pid), // Function to retrieve the executable path
 		}
 		process.Hash = calculateProcessHash(process)
 		processes[i] = process
 	}
 
 	// Write processes to a JSON file
-	file, err := os.Create("allinternalprocess.json")
-	if err != nil {
-		logrus.Errorf("cannot create JSON file, error: %v", err)
-		return nil, err
-	}
-	defer file.Close()
+	// file, err := os.Create("allinternalprocess.json")
+	// if err != nil {
+	// 	logrus.Errorf("cannot create JSON file, error: %v", err)
+	// 	return nil, err
+	// }
+	// defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	if err := encoder.Encode(processes); err != nil {
-		logrus.Errorf("cannot encode processes to JSON, error: %v", err)
-		return nil, err
-	}
+	// encoder := json.NewEncoder(file)
+	// if err := encoder.Encode(processes); err != nil {
+	// 	logrus.Errorf("cannot encode processes to JSON, error: %v", err)
+	// 	return nil, err
+	// }
 
 	return processes, nil
 }
 
+func getProcessExePath(pid int) string {
+	p, err := process.NewProcess(int32(pid))
+	if err != nil {
+		logrus.Infof("Cannot retrieve process: %s\n", err)
+		return ""
+	}
+
+	exePath, err := p.Exe()
+	if err != nil {
+		logrus.Infof("Cannot retrieve executable path: %s\n", err)
+		return ""
+	}
+
+	return exePath
+}
 func calculateProcessHash(process Process) string {
 	hasher := sha256.New()
 	hasher.Write([]byte(process.ImageName))
-	hasher.Write([]byte(strconv.Itoa(process.PID)))
-	hasher.Write([]byte(process.SessionName))
-	hasher.Write([]byte(strconv.Itoa(process.SessionNum)))
-	hasher.Write([]byte(process.MemUsage))
-	hasher.Write([]byte(process.Status))
-	hasher.Write([]byte(process.UserName))
-	hasher.Write([]byte(process.CPUTime))
-	hasher.Write([]byte(process.WindowTitle))
+	hasher.Write([]byte(process.ExePath))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
