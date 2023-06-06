@@ -28,9 +28,6 @@ Copy-Item -Path ".\config.toml" -Destination $destinationFile -Force
 
 Write-Host "config.toml has been moved to '$destinationFile'."
 
-
-
-
 # Check if main.exe exists in the current directory
 if (Test-Path -Path ".\main.exe") {
     # If it does, ask the user if they want to rebuild
@@ -81,6 +78,9 @@ $failureActions | Out-File -FilePath $failureActionsPath -Encoding ASCII
 
 & sc.exe failure $serviceName reset= 86400 actions= restart/0
 & sc.exe failureflag $serviceName 1
+
+# Set the service to restart on system restart
+Set-Service -Name $serviceName -StartupType Automatic
 
 # Start the service
 Write-Host "Starting the '$displayName' service..."
