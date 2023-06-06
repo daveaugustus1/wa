@@ -1,13 +1,16 @@
 package commands
 
 import (
+	"crypto/sha256"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
 
+	"github.com/shirou/gopsutil/process"
 	"github.com/sirupsen/logrus"
 )
 
@@ -29,6 +32,7 @@ type NetstatB struct {
 	State          string `json:"state"`
 	ProcessName    string `json:"process_name"`
 }
+
 type Process struct {
 	ImageName   string
 	PID         int
@@ -39,6 +43,8 @@ type Process struct {
 	UserName    string
 	CPUTime     string
 	WindowTitle string
+	ExePath     string
+	Hash        string
 }
 
 func GetNetstatA() ([]NetstatA, error) {
@@ -143,17 +149,19 @@ func GetAllInternalProcess() ([]Process, error) {
 		logrus.Errorf("cannot run task command, error: %v", err)
 		return nil, err
 	}
+
 	reader := csv.NewReader(strings.NewReader(string(output)))
 	records, err := reader.ReadAll()
 	if err != nil {
 		logrus.Errorf("cannot read tasklist output, error: %v", err)
 		return nil, err
 	}
+
 	processes := make([]Process, len(records)-1)
 	for i, record := range records[1:] {
 		pid, _ := strconv.Atoi(record[1])
 		sessionNum, _ := strconv.Atoi(record[3])
-		processes[i] = Process{
+		process := Process{
 			ImageName:   record[0],
 			PID:         pid,
 			SessionName: record[2],
@@ -163,15 +171,47 @@ func GetAllInternalProcess() ([]Process, error) {
 			UserName:    record[6],
 			CPUTime:     record[7],
 			WindowTitle: record[8],
+			ExePath:     getProcessExePath(pid), // Function to retrieve the executable path
 		}
+		process.Hash = calculateProcessHash(process)
+		processes[i] = process
 	}
 
-	// processesByte, err := json.MarshalIndent(processes, "", "\t")
+	// Write processes to a JSON file
+	// file, err := os.Create("allinternalprocess.json")
 	// if err != nil {
-	// 	logrus.Errorf("cannot unmarshal unmarshal processes, error: %v", err)
+	// 	logrus.Errorf("cannot create JSON file, error: %v", err)
 	// 	return nil, err
 	// }
-	// ioutil.WriteFile("allinternalprocess.json", processesByte, 0777)
+	// defer file.Close()
+
+	// encoder := json.NewEncoder(file)
+	// if err := encoder.Encode(processes); err != nil {
+	// 	logrus.Errorf("cannot encode processes to JSON, error: %v", err)
+	// 	return nil, err
+	// }
 
 	return processes, nil
+}
+
+func getProcessExePath(pid int) string {
+	p, err := process.NewProcess(int32(pid))
+	if err != nil {
+		logrus.Infof("Cannot retrieve process: %s\n", err)
+		return ""
+	}
+
+	exePath, err := p.Exe()
+	if err != nil {
+		logrus.Infof("Cannot retrieve executable path: %s\n", err)
+		return ""
+	}
+
+	return exePath
+}
+func calculateProcessHash(process Process) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(process.ImageName))
+	hasher.Write([]byte(process.ExePath))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

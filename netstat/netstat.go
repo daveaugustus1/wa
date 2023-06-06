@@ -138,6 +138,5 @@ func GetNetStats() ([]byte, error) {
 		logrus.Errorf("cannot marshal net stat details: %+v", err)
 		return nil, err
 	}
-
 	return byteSlice, err
 }

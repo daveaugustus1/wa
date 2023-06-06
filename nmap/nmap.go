@@ -116,8 +116,8 @@ func GetNmapDetails(addr, portRange string) ([]byte, error) {
 		nmap.WithTargets(addr),
 		nmap.WithPorts(portRange),
 		nmap.WithServiceInfo(),
-		nmap.WithVersionAll(),
-		nmap.WithVersionTrace(),
+		// nmap.WithVersionAll(),
+		// nmap.WithVersionTrace(),
 	)
 	if err != nil {
 		logrus.Fatalf("failed to create scanner: %v", err)

@@ -2,21 +2,29 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
+	toml "github.com/pelletier/go-toml"
+
 	"github.com/Expand-My-Business/go_windows_agent/netstat"
 	"github.com/Expand-My-Business/go_windows_agent/nmap"
 	"github.com/Expand-My-Business/go_windows_agent/windowsagent"
-	"github.com/Expand-My-Business/go_windows_agent/windowseventlogs"
+	"github.com/Expand-My-Business/go_windows_agent/windowslogs"
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 )
 
 var companyCode string
+
+type Config struct {
+	Organization struct {
+		Code string `toml:"code"`
+	} `toml:"organization"`
+}
 
 type Message struct {
 	data []byte
@@ -30,7 +38,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.GetNmapDetails("127.0.0.1", "1-65000")
+			nmapXbyte, err := nmap.NmapDataCmd()
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
@@ -102,7 +110,7 @@ func routineWinLogs(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			netXbyte, err := windowseventlogs.GetLogData()
+			netXbyte, err := windowslogs.GetSystemLogs()
 			if err != nil {
 				logrus.Errorf("cannot get windoes logs, error: %+v", err)
 				output <- Message{
@@ -193,8 +201,22 @@ func (m *myService) run() {
 }
 
 func init() {
-	flag.StringVar(&companyCode, "companycode", "", "Company code")
-	flag.Parse()
+	// Read the TOML file
+	data, err := ioutil.ReadFile(`C:\Program Files\GoAgent\config\config.toml`)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		os.Exit(1)
+	}
+
+	// Parse the TOML data into a Config struct
+	var config Config
+	err = toml.Unmarshal(data, &config)
+	if err != nil {
+		fmt.Println("Error parsing TOML:", err)
+		os.Exit(1)
+	}
+
+	companyCode = config.Organization.Code
 }
 
 func main() {
