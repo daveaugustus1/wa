@@ -38,7 +38,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.NmapDataCmd()
+			nmapXbyte, err := nmap.GetNmapDetails("127.0.0.1", "1-65000")
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
@@ -257,6 +257,7 @@ func main() {
 		return
 	}
 
+	logrus.Info("Starting the GoAgent service...")
 	// Start the service. If the service is already running, this call will block until the service stops.
 	err = svc.Run()
 	if err != nil {
