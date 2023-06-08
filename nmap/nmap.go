@@ -120,14 +120,14 @@ func GetNmapDetails(addr, portRange string) ([]byte, error) {
 		// nmap.WithVersionTrace(),
 	)
 	if err != nil {
-		logrus.Fatalf("failed to create scanner: %v", err)
+		logrus.Errorf("failed to create scanner: %v", err)
 		return nil, err
 	}
 
 	// Run the scan
 	result, _, err := scanner.Run()
 	if err != nil {
-		logrus.Fatalf("failed to run scan: %v", err)
+		logrus.Errorf("failed to run scan: %v", err)
 		return nil, err
 	}
 
