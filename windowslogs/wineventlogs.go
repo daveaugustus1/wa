@@ -90,7 +90,7 @@ func GetTypesOfLogs() {
 	query := wmi.CreateQuery(&logs, "")
 	err := wmi.Query(query, &logs)
 	if err != nil {
-		panic(err)
+		logrus.Errorf("cannot run the query logs, error: %+v", err)
 	}
 
 	for _, log := range logs {
@@ -102,11 +102,11 @@ func GetLogData() ([]byte, error) {
 	var logData LogData
 	eventLog, err := GetWindowsEventLog()
 	if err != nil {
-		logrus.Error("cannot run the event logs, error: %+v", err)
+		logrus.Errorf("cannot run the event logs, error: %+v", err)
 	}
 	applog, err := GetWindowsApplicationLog()
 	if err != nil {
-		logrus.Error("cannot run the Application logs, error: %+v", err)
+		logrus.Errorf("cannot run the Application logs, error: %+v", err)
 	}
 	logData.Data = append(logData.Data, eventLog...)
 	logData.Data = append(logData.Data, applog...)
@@ -120,7 +120,7 @@ func GetLogData() ([]byte, error) {
 
 	jsonString, err := json.MarshalIndent(logData, "", "\t")
 	if err != nil {
-		logrus.Error("cannot marshal to even log, error: %+v", err)
+		logrus.Errorf("cannot marshal to even log, error: %+v", err)
 		return nil, err
 	}
 	// ioutil.WriteFile("sys_logs.json", jsonString, 0777)

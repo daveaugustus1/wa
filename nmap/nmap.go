@@ -116,8 +116,8 @@ func GetNmapDetails(addr, portRange string) ([]byte, error) {
 		nmap.WithTargets(addr),
 		nmap.WithPorts(portRange),
 		nmap.WithServiceInfo(),
-		// nmap.WithVersionAll(),
-		// nmap.WithVersionTrace(),
+		nmap.WithVersionAll(),
+		nmap.WithVersionTrace(),
 	)
 	if err != nil {
 		logrus.Errorf("failed to create scanner: %v", err)
@@ -152,10 +152,12 @@ func GetNmapDetails(addr, portRange string) ([]byte, error) {
 		return nil, err
 	}
 
-	pd := NmapDetails{
+	pd := &NmapDetails{
 		Nmap:   *ns,
 		HostIP: addr1,
 	}
+
+	pd = SetOSTypeToWindows(pd)
 
 	bxPd, err := json.MarshalIndent(pd, "", "\t")
 	if err != nil {
@@ -164,7 +166,17 @@ func GetNmapDetails(addr, portRange string) ([]byte, error) {
 	}
 
 	// if err := ioutil.WriteFile("old_nmap.json", bxPd, 0644); err != nil {
-	// 	panic(err)
+	// 	logrus.Errorf("cannot marshal json: %+v", err)
+	// 	return nil, err
 	// }
 	return bxPd, nil
+}
+
+func SetOSTypeToWindows(details *NmapDetails) *NmapDetails {
+	for i := 0; i < len(details.Nmap); i++ {
+		for j := 0; j < len(details.Nmap[i].Ports); j++ {
+			details.Nmap[i].Ports[j].Service.OsType = "windows"
+		}
+	}
+	return details
 }

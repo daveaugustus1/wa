@@ -129,7 +129,6 @@ func routineWinLogs(url string, output chan<- Message, done <-chan struct{}) {
 }
 
 func sendStringToAPI(url string, data string) error {
-	logrus.Infof("Sending data to API: %s", url)
 	requestBody := bytes.NewBuffer([]byte(data))
 
 	req, err := http.NewRequest("POST", url, requestBody)
@@ -149,7 +148,6 @@ func sendStringToAPI(url string, data string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	logrus.Infof("Ending execution for API: %s", url)
 	return nil
 }
 

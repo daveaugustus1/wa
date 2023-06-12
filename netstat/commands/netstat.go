@@ -72,16 +72,7 @@ func GetNetstatA() ([]NetstatA, error) {
 		}
 	}
 	return result, nil
-	// // Print the result as JSON
-	// netstatA, err := json.MarshalIndent(result, "", "\t")
-	// if err != nil {
-	// 	logrus.Errorf("cannot unmarshal netstat -a values, error: %v", err)
-	// 	return nil, err
-	// }
 
-	// // ioutil.WriteFile("netstata.json", netstatA, 0777)
-	// // fmt.Println(string(netstatA))
-	// return netstatA, nil
 }
 
 func GetNetstatB() ([]NetstatB, error) {
@@ -114,16 +105,6 @@ func GetNetstatB() ([]NetstatB, error) {
 	}
 	return result, nil
 
-	// // Print the result as JSON
-	// netstatB, err := json.MarshalIndent(result, "", "\t")
-	// if err != nil {
-	// 	logrus.Errorf("cannot unmarshal netstat -b values, error: %v", err)
-	// 	return nil, err
-	// }
-	// // ioutil.WriteFile("netstatb.json", jsonResult, 777)
-	// // fmt.Println(string(jsonResult))
-
-	// return netstatB, nil
 }
 
 func GetNetStats() {
@@ -177,33 +158,19 @@ func GetAllInternalProcess() ([]Process, error) {
 		processes[i] = process
 	}
 
-	// Write processes to a JSON file
-	// file, err := os.Create("allinternalprocess.json")
-	// if err != nil {
-	// 	logrus.Errorf("cannot create JSON file, error: %v", err)
-	// 	return nil, err
-	// }
-	// defer file.Close()
-
-	// encoder := json.NewEncoder(file)
-	// if err := encoder.Encode(processes); err != nil {
-	// 	logrus.Errorf("cannot encode processes to JSON, error: %v", err)
-	// 	return nil, err
-	// }
-
 	return processes, nil
 }
 
 func getProcessExePath(pid int) string {
 	p, err := process.NewProcess(int32(pid))
 	if err != nil {
-		logrus.Infof("Cannot retrieve process: %s\n", err)
+		logrus.Errorf("Cannot retrieve process: %s\n", err)
 		return ""
 	}
 
 	exePath, err := p.Exe()
 	if err != nil {
-		logrus.Infof("Cannot retrieve executable path: %s\n", err)
+		logrus.Errorf("Cannot retrieve executable path: %s\n", err)
 		return ""
 	}
 

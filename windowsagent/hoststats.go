@@ -13,7 +13,6 @@ func HostStats() (*host.InfoStat, error) {
 		logrus.Errorf("cannot  get hostInfo, error: %+v", err)
 	}
 	//almost every return value is a struct
-	// logrus.Infof("All Host info: ", infoStat)
 	return infoStat, err
 }
 

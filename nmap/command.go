@@ -42,7 +42,6 @@ func NmapDataCmd() ([]byte, error) {
 		return nil, err
 	}
 	// ioutil.WriteFile("nmap111.json", data, 0777)
-	logrus.Infof("Nmap results have been saved to nmap_results.json")
 	return data, err
 }
 

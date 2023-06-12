@@ -50,7 +50,7 @@ func GetNetStats() ([]byte, error) {
 	// Get TCP connections
 	tcpConns, err := net.Connections("tcp")
 	if err != nil {
-		panic(err)
+		logrus.Errorf("tcp network connection failed, error: %v", err)
 	}
 
 	allTCPStats := []TCPStats{}
@@ -59,11 +59,11 @@ func GetNetStats() ([]byte, error) {
 	for _, conn := range tcpConns {
 		proc, err := process.NewProcess(conn.Pid)
 		if err != nil {
-			panic(err)
+			logrus.Errorf("cannot get new process, error: %v", err)
 		}
 		name, err := proc.Name()
 		if err != nil {
-			panic(err)
+			logrus.Errorf("cannot get process name, error: %v", err)
 		}
 		tcpStats := TCPStats{}
 		tcpStats.Name = name
@@ -82,7 +82,7 @@ func GetNetStats() ([]byte, error) {
 	// Get UDP connections
 	udpConns, err := net.Connections("udp")
 	if err != nil {
-		panic(err)
+		logrus.Errorf("udp network connection failed, error: %v", err)
 	}
 
 	allUDPStats := []UDPStats{}
@@ -92,11 +92,11 @@ func GetNetStats() ([]byte, error) {
 	for _, conn := range udpConns {
 		proc, err := process.NewProcess(conn.Pid)
 		if err != nil {
-			panic(err)
+			logrus.Errorf("cannot get new process, error: %v", err)
 		}
 		name, err := proc.Name()
 		if err != nil {
-			panic(err)
+			logrus.Errorf("cannot get process name, error: %v", err)
 		}
 
 		udpStats := UDPStats{}
