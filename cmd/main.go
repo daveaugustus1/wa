@@ -38,7 +38,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.GetNmapDetails("127.0.0.1", "1-65000")
+			nmapXbyte, err := nmap.NmapDataCmd()
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
