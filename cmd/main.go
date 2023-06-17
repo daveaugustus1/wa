@@ -11,7 +11,7 @@ import (
 	toml "github.com/pelletier/go-toml"
 
 	"github.com/Expand-My-Business/go_windows_agent/netstat"
-	"github.com/Expand-My-Business/go_windows_agent/nmap"
+	"github.com/Expand-My-Business/go_windows_agent/nmaprunv2"
 	"github.com/Expand-My-Business/go_windows_agent/windowsagent"
 	"github.com/Expand-My-Business/go_windows_agent/windowslogs"
 	"github.com/kardianos/service"
@@ -38,7 +38,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.NmapDataCmd()
+			nmapXbyte, err := nmaprunv2.PortScannedReport()
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
