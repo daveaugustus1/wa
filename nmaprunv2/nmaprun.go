@@ -10,7 +10,7 @@ import (
 )
 
 func RunNmapScan() (*NmapRun, error) {
-	// Executing the nmap command
+	// Executing the nmap command from the absloute path
 	cmd := exec.Command(`C:\Program Files (x86)\Nmap\nmap.exe`, "-sV", "-oX", "-", "-p-", "localhost")
 
 	// Get the std output
