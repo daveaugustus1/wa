@@ -27,3 +27,4 @@ netstat.json
 
 *.json
 agent.log
+failureactions.txt

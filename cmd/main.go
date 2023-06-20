@@ -3,13 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
-	toml "github.com/pelletier/go-toml"
-
+	"github.com/Expand-My-Business/go_windows_agent/config"
 	"github.com/Expand-My-Business/go_windows_agent/netstat"
 	"github.com/Expand-My-Business/go_windows_agent/nmaprunv2"
 	"github.com/Expand-My-Business/go_windows_agent/windowsagent"
@@ -199,22 +197,8 @@ func (m *myService) run() {
 }
 
 func init() {
-	// Read the TOML file
-	data, err := ioutil.ReadFile(`C:\Program Files\GoAgent\config\config.toml`)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		os.Exit(1)
-	}
-
-	// Parse the TOML data into a Config struct
-	var config Config
-	err = toml.Unmarshal(data, &config)
-	if err != nil {
-		fmt.Println("Error parsing TOML:", err)
-		os.Exit(1)
-	}
-
-	companyCode = config.Organization.Code
+	cfg := config.GetConfigInstance()
+	companyCode = cfg.CompanyCode
 }
 
 func main() {
