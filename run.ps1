@@ -23,6 +23,12 @@ if (-not (Test-Path -Path $destinationDir)) {
     New-Item -ItemType Directory -Path $destinationDir | Out-Null
 }
 
+$etcDir = "C:\Program Files\GoAgent\etc"
+# Create the etc directory if it doesn't exist
+if (-not (Test-Path -Path $etcDir)) {
+    New-Item -ItemType Directory -Path $etcDir | Out-Null
+}
+
 # Copy and overwrite the config.toml file
 Copy-Item -Path ".\config.toml" -Destination $destinationFile -Force
 

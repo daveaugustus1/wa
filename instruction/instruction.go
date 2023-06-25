@@ -1,65 +1,104 @@
-package main
+package instruction
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
+	"github.com/Expand-My-Business/go_windows_agent/config"
+	"github.com/Expand-My-Business/go_windows_agent/constants"
+	"github.com/Expand-My-Business/go_windows_agent/instruction/operator"
+	"github.com/Expand-My-Business/go_windows_agent/utils"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	apiURL     = "http://13.235.66.99:8089/agent-instructions?hostIP=%s"
-	orgID      = "PRA646ef244a79a86633dffebd4"
-	hostIP     = "192.168.6.40"
 	pollPeriod = 10 * time.Second // Polling interval in seconds
 )
 
-func main() {
-	lastUpdateTime := time.Time{}
+func GetInstructions() {
+	privateIP, err := utils.GetPrivateIPAddress()
+	if err != nil {
+		logrus.Errorf("Cannot get the private ip, error: %+v", err)
+		return
+	}
 
+	// lastUpdateTime := time.Time{}
+	cfg := config.GetConfigInstance()
 	for {
 		// Prepare the request
-		url := fmt.Sprintf(apiURL, hostIP)
+		url := fmt.Sprintf(cfg.InstructionEndpoint, cfg.Port, privateIP)
+
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
-			fmt.Println("Failed to create request:", err)
+			logrus.Errorf("Failed to create request, error: %v", err)
 			continue
 		}
 
 		// Set headers
-		req.Header.Set("company-code", orgID)
+		req.Header.Set("company-code", cfg.CompanyCode)
 
 		// Send the request
 		client := http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Println("Request failed:", err)
+			logrus.Errorf("Request failed, error: %v", err)
 			continue
 		}
 
 		response, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			logrus.Errorf("cannot read response body, error: %+v", err)
+			logrus.Errorf("Cannot read response body, error: %+v", err)
 			return
 		}
 
-		ioutil.WriteFile("response.json", response, 0777)
+		ins := InstructionSet{}
+		json.Unmarshal(response, &ins)
+		fmt.Printf("ins: %+v\n", ins)
+
+		if ins.CompanyCode != cfg.CompanyCode {
+			logrus.Errorf("deployed company code %s didn't match with resp code %s", cfg.CompanyCode, ins.CompanyCode)
+			return
+		}
+
 		// Check if the data was updated
-		if resp.StatusCode == http.StatusOK && resp.Header.Get("Last-Modified") != "" {
-			lastModified, err := time.Parse(http.TimeFormat, resp.Header.Get("Last-Modified"))
-			if err != nil {
-				fmt.Println("Failed to parse Last-Modified header:", err)
-				continue
-			}
-
-			if lastModified.After(lastUpdateTime) {
-				// Data was updated, process the response
-				// Here, you can parse the response body or perform any desired actions
-
-				// Update the last update time
-				lastUpdateTime = lastModified
+		if resp.StatusCode == http.StatusOK {
+			for _, v := range ins.Instruction {
+				switch v.Action {
+				case constants.StartService:
+					if err := operator.StartService(v.ServiceName); err != nil {
+						logrus.Errorf("cannot start the service, error: %v", err)
+						RespondExecutionDetails(v.ServiceName, err.Error())
+					} else {
+						RespondExecutionDetails(v.ServiceName, "The service started successfully")
+					}
+				case constants.StopService:
+					if err := operator.StopService(v.ServiceName); err != nil {
+						logrus.Errorf("cannot stop the service, error: %v", err)
+						RespondExecutionDetails(v.ServiceName, err.Error())
+					} else {
+						RespondExecutionDetails(v.ServiceName, "The service stoped successfully")
+					}
+				case constants.RestartService:
+					if err := operator.RestartService(v.ServiceName); err != nil {
+						logrus.Errorf("cannot restart the service, error: %v", err)
+						RespondExecutionDetails(v.ServiceName, err.Error())
+					} else {
+						RespondExecutionDetails(v.ServiceName, "The service restarted successfully")
+					}
+				case constants.RefreshService:
+					if err := operator.RestartService(v.ServiceName); err != nil {
+						logrus.Errorf("cannot restart the service, error: %v", err)
+						RespondExecutionDetails(v.ServiceName, err.Error())
+					} else {
+						RespondExecutionDetails(v.ServiceName, "The service refreshed successfully")
+					}
+				default:
+					RespondExecutionDetails(v.ServiceName, "Well, the action isn't supported by the agent!")
+				}
 			}
 		}
 
@@ -69,4 +108,52 @@ func main() {
 		// Wait for the next poll
 		time.Sleep(pollPeriod)
 	}
+}
+
+type Payload struct {
+	Servicename string `json:"service_name"`
+	Message     string `json:"message"`
+}
+
+func RespondExecutionDetails(serviceName, msg string) {
+	// Prepare the payload data
+	payload := Payload{
+		Servicename: serviceName,
+		Message:     msg,
+	}
+
+	// Convert payload to JSON
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		logrus.Errorf("Failed to marshal payload: %v", err)
+		return
+	}
+
+	// Send POST request
+	url := "https://api.example.com/endpoint" // Replace with your API endpoint URL
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		logrus.Errorf("Failed to create POST request: %v", err)
+		return
+	}
+
+	// Set request headers (if needed)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		logrus.Errorf("POST request failed: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		logrus.Errorf("API returned non-OK status: %v", resp.Status)
+		return
+	}
+
+	logrus.Infof("POST request completed successfully.")
 }

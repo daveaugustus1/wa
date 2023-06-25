@@ -170,7 +170,7 @@ func getProcessExePath(pid int) string {
 
 	exePath, err := p.Exe()
 	if err != nil {
-		logrus.Errorf("Cannot retrieve executable path: %s\n", err)
+		// logrus.Errorf("Cannot retrieve executable path: %s\n", err)
 		return ""
 	}
 
