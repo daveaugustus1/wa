@@ -2,7 +2,6 @@ package windowsagent
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net"
 
 	"github.com/Expand-My-Business/go_windows_agent/utils"
@@ -90,9 +89,9 @@ func GetWindowsStats() ([]byte, error) {
 		return nil, err
 	}
 
-	if err := ioutil.WriteFile("address.json", windowsByteSlice, 0777); err != nil {
-		logrus.Errorf("cannot write address.json, error: %+v", err)
-	}
+	// if err := ioutil.WriteFile("address.json", windowsByteSlice, 0777); err != nil {
+	// 	logrus.Errorf("cannot write address.json, error: %+v", err)
+	// }
 	return windowsByteSlice, nil
 
 }

@@ -64,44 +64,103 @@ func GetInstructions() {
 			return
 		}
 
+		ip, _ := utils.GetPrivateIPAddress()
+		macAddr, _ := utils.GetMacAddresses()
+		// Create response struct
+		executionResp := InstructionSetResp{
+			AgentIP:     ip,
+			MacAddress:  macAddr[0],
+			CompanyCode: cfg.CompanyCode,
+		}
+
 		// Check if the data was updated
 		if resp.StatusCode == http.StatusOK {
 			for _, v := range ins.Instruction {
 				switch v.Action {
 				case constants.StartService:
 					if err := operator.StartService(v.ServiceName); err != nil {
-						logrus.Errorf("cannot start the service, error: %v", err)
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
+						executionRes := InstructionResp{
+							Action:      constants.StartService,
+							IsExecuted:  true,
+							Msg:         err.Error(),
+							ServiceName: v.ServiceName,
+							Status:      "error occured",
+						}
+						logrus.Errorf("cannot start the service %s, error: %v", v.ServiceName, err)
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service started successfully")
+						executionRes := InstructionResp{
+							Action:      constants.StartService,
+							IsExecuted:  true,
+							Msg:         "The service started successfully",
+							ServiceName: v.ServiceName,
+							Status:      "started",
+						}
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service started successfully")
 					}
 				case constants.StopService:
 					if err := operator.StopService(v.ServiceName); err != nil {
-						logrus.Errorf("cannot stop the service, error: %v", err)
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
+						executionRes := InstructionResp{
+							Action:      constants.StopService,
+							IsExecuted:  true,
+							Msg:         err.Error(),
+							ServiceName: v.ServiceName,
+							Status:      "error occured",
+						}
+						logrus.Errorf("cannot stop the service %s, error: %v", v.ServiceName, err)
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service stoped successfully")
+						executionRes := InstructionResp{
+							Action:      constants.StopService,
+							IsExecuted:  true,
+							Msg:         "The service stoped successfully",
+							ServiceName: v.ServiceName,
+							Status:      "stopped",
+						}
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service stoped successfully")
 					}
 				case constants.RestartService:
 					if err := operator.RestartService(v.ServiceName); err != nil {
-						logrus.Errorf("cannot restart the service, error: %v", err)
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
+						executionRes := InstructionResp{
+							Action:      constants.RestartService,
+							IsExecuted:  true,
+							Msg:         err.Error(),
+							ServiceName: v.ServiceName,
+							Status:      "error occured",
+						}
+						logrus.Errorf("cannot restart the service %s, error: %v", v.ServiceName, err)
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service restarted successfully")
+						executionRes := InstructionResp{
+							Action:      constants.RestartService,
+							IsExecuted:  true,
+							Msg:         "The service restarted successfully",
+							ServiceName: v.ServiceName,
+							Status:      "re-started",
+						}
+						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
+						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service restarted successfully")
 					}
-				case constants.RefreshService:
-					if err := operator.RestartService(v.ServiceName); err != nil {
-						logrus.Errorf("cannot restart the service, error: %v", err)
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
-					} else {
-						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service refreshed successfully")
-					}
+
 				default:
-					RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "Well, the action isn't supported by the agent!")
+					executionRes := InstructionResp{
+						Action:      v.Action,
+						IsExecuted:  true,
+						Msg:         "Well, the action isn't supported by the agent!",
+						ServiceName: v.ServiceName,
+						Status:      "no-action",
+					}
+					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 				}
 			}
 		}
 
+		RespondExecutionDetails(cfg.InstructionRespEndpoint, cfg.CompanyCode, executionResp)
 		// Close the response body
 		resp.Body.Close()
 
@@ -115,13 +174,7 @@ type Payload struct {
 	Message     string `json:"message"`
 }
 
-func RespondExecutionDetails(endpoint, serviceName, companyCode, msg string) {
-	// Prepare the payload data
-	payload := Payload{
-		Servicename: serviceName,
-		Message:     msg,
-	}
-
+func RespondExecutionDetails(endpoint, companyCode string, payload InstructionSetResp) {
 	// Convert payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
