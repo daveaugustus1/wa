@@ -13,9 +13,10 @@ import (
 var lock = &sync.Mutex{}
 
 type Config struct {
-	CompanyCode         string `toml:"company_code"`
-	InstructionEndpoint string `toml:"instruction_endpoint"`
-	Port                string `toml:"port"`
+	CompanyCode             string `toml:"company_code"`
+	InstructionEndpoint     string `toml:"instruction_endpoint"`
+	Port                    string `toml:"port"`
+	InstructionRespEndpoint string `toml:"instructions_resp_endpoint"`
 }
 
 var SingleConfigInstance *Config

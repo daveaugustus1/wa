@@ -1,3 +1,4 @@
-company_code = "instructions_set_test"
+company_code = "PRA646ef244a79a86633dffebd4"
 instruction_endpoint = "http://13.235.66.99:%s/agent-instructions?hostIP=%s"
 port = "8089"
+instructions_resp_endpoint = "http://13.235.66.99:8089/agent-instructions"

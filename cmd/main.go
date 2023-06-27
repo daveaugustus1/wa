@@ -135,7 +135,6 @@ func sendStringToAPI(url string, data string) error {
 		logrus.Errorf("cannot make a request wrapper, error: %+v", err)
 		return err
 	}
-	logrus.Info("companycode: ", companyCode) // TODO: Remove this line
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("company-code", companyCode)
 

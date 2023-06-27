@@ -71,33 +71,33 @@ func GetInstructions() {
 				case constants.StartService:
 					if err := operator.StartService(v.ServiceName); err != nil {
 						logrus.Errorf("cannot start the service, error: %v", err)
-						RespondExecutionDetails(v.ServiceName, err.Error())
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(v.ServiceName, "The service started successfully")
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service started successfully")
 					}
 				case constants.StopService:
 					if err := operator.StopService(v.ServiceName); err != nil {
 						logrus.Errorf("cannot stop the service, error: %v", err)
-						RespondExecutionDetails(v.ServiceName, err.Error())
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(v.ServiceName, "The service stoped successfully")
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service stoped successfully")
 					}
 				case constants.RestartService:
 					if err := operator.RestartService(v.ServiceName); err != nil {
 						logrus.Errorf("cannot restart the service, error: %v", err)
-						RespondExecutionDetails(v.ServiceName, err.Error())
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(v.ServiceName, "The service restarted successfully")
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service restarted successfully")
 					}
 				case constants.RefreshService:
 					if err := operator.RestartService(v.ServiceName); err != nil {
 						logrus.Errorf("cannot restart the service, error: %v", err)
-						RespondExecutionDetails(v.ServiceName, err.Error())
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
-						RespondExecutionDetails(v.ServiceName, "The service refreshed successfully")
+						RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service refreshed successfully")
 					}
 				default:
-					RespondExecutionDetails(v.ServiceName, "Well, the action isn't supported by the agent!")
+					RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "Well, the action isn't supported by the agent!")
 				}
 			}
 		}
@@ -115,7 +115,7 @@ type Payload struct {
 	Message     string `json:"message"`
 }
 
-func RespondExecutionDetails(serviceName, msg string) {
+func RespondExecutionDetails(endpoint, serviceName, companyCode, msg string) {
 	// Prepare the payload data
 	payload := Payload{
 		Servicename: serviceName,
@@ -130,8 +130,9 @@ func RespondExecutionDetails(serviceName, msg string) {
 	}
 
 	// Send POST request
-	url := "https://api.example.com/endpoint" // Replace with your API endpoint URL
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonPayload))
+	logrus.Infof("Instruction resp url: %v", endpoint)
+	// url := "https://api.example.com/endpoint" // Replace with your API endpoint URL
+	req, err := http.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		logrus.Errorf("Failed to create POST request: %v", err)
 		return
@@ -139,6 +140,7 @@ func RespondExecutionDetails(serviceName, msg string) {
 
 	// Set request headers (if needed)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("company-code", companyCode)
 
 	// Send the request
 	client := http.Client{}
