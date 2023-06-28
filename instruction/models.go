@@ -8,6 +8,7 @@ type InstructionSet struct {
 }
 
 type Instruction struct {
+	Id          string `json:"id"`
 	ServiceName string `json:"service_name"`
 	Action      string `json:"action"`
 	IsExecuted  bool   `json:"is_executed"`

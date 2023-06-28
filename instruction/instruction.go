@@ -80,22 +80,24 @@ func GetInstructions() {
 				case constants.StartService:
 					if err := operator.StartService(v.ServiceName); err != nil {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.StartService,
 							IsExecuted:  true,
 							Msg:         err.Error(),
 							ServiceName: v.ServiceName,
-							Status:      "error occured",
+							Status:      "failed",
 						}
 						logrus.Errorf("cannot start the service %s, error: %v", v.ServiceName, err)
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.StartService,
 							IsExecuted:  true,
 							Msg:         "The service started successfully",
 							ServiceName: v.ServiceName,
-							Status:      "started",
+							Status:      "passed",
 						}
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service started successfully")
@@ -103,22 +105,24 @@ func GetInstructions() {
 				case constants.StopService:
 					if err := operator.StopService(v.ServiceName); err != nil {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.StopService,
 							IsExecuted:  true,
 							Msg:         err.Error(),
 							ServiceName: v.ServiceName,
-							Status:      "error occured",
+							Status:      "failed",
 						}
 						logrus.Errorf("cannot stop the service %s, error: %v", v.ServiceName, err)
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.StopService,
 							IsExecuted:  true,
 							Msg:         "The service stoped successfully",
 							ServiceName: v.ServiceName,
-							Status:      "stopped",
+							Status:      "passed",
 						}
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service stoped successfully")
@@ -126,22 +130,24 @@ func GetInstructions() {
 				case constants.RestartService:
 					if err := operator.RestartService(v.ServiceName); err != nil {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.RestartService,
 							IsExecuted:  true,
 							Msg:         err.Error(),
 							ServiceName: v.ServiceName,
-							Status:      "error occured",
+							Status:      "failed",
 						}
 						logrus.Errorf("cannot restart the service %s, error: %v", v.ServiceName, err)
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, err.Error())
 					} else {
 						executionRes := InstructionResp{
+							ID:          v.Id,
 							Action:      constants.RestartService,
 							IsExecuted:  true,
 							Msg:         "The service restarted successfully",
 							ServiceName: v.ServiceName,
-							Status:      "re-started",
+							Status:      "passed",
 						}
 						executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service restarted successfully")
@@ -149,11 +155,12 @@ func GetInstructions() {
 
 				default:
 					executionRes := InstructionResp{
+						ID:          v.Id,
 						Action:      v.Action,
 						IsExecuted:  true,
 						Msg:         "Well, the action isn't supported by the agent!",
 						ServiceName: v.ServiceName,
-						Status:      "no-action",
+						Status:      "failed",
 					}
 					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
 				}
