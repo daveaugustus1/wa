@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Expand-My-Business/go_windows_agent/config"
+	"github.com/Expand-My-Business/go_windows_agent/constants"
 	"github.com/Expand-My-Business/go_windows_agent/instruction"
 	"github.com/Expand-My-Business/go_windows_agent/netstat"
 	"github.com/Expand-My-Business/go_windows_agent/nmaprunv2"
@@ -174,10 +175,10 @@ func (m *myService) run() {
 	output := make(chan Message)
 
 	// Start the goroutines
-	go routineANmap("http://13.235.66.99:8011/agent_ports_data", output, nil)
-	go routineBWindows("http://13.235.66.99:8011/add_agent_logs", output, nil)
-	go routineCNetStat("http://13.235.66.99:8011/agent_process_data", output, nil)
-	go routineWinLogs("http://13.235.66.99:8011/agent_system_logs_data", output, nil)
+	go routineANmap(constants.NmapURL, output, nil)
+	go routineBWindows(constants.WindowsSystemResourceURL, output, nil)
+	go routineCNetStat(constants.NetStatURL, output, nil)
+	go routineWinLogs(constants.WindowsLogURL, output, nil)
 
 	// Print the messages from the goroutines as they arrive
 	go func() {

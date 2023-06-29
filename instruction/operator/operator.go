@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 // func main() {
@@ -45,7 +43,7 @@ func StartService(serviceName string) error {
 
 	// Check the output for any error messages or confirmations if needed
 	// For example, you can parse the output to check if the service was successfully started
-	logrus.Infof("output: %v\n", output)
+	_ = output
 
 	return nil
 }
@@ -59,7 +57,7 @@ func StopService(serviceName string) error {
 
 	// Check the output for any error messages or confirmations if needed
 	// For example, you can parse the output to check if the service was successfully stopped
-	logrus.Infof("output: %v\n", output)
+	_ = output
 
 	return nil
 }
@@ -73,7 +71,7 @@ func RestartService(serviceName string) error {
 
 	// Check the output for any error messages or confirmations if needed
 	// For example, you can parse the output to check if the service was successfully restarted
-	logrus.Infof("output: %v\n", output)
+	_ = output
 
 	return nil
 }
