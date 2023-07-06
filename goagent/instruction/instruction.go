@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Expand-My-Business/go_windows_agent/config"
 	"github.com/Expand-My-Business/go_windows_agent/constants"
-	"github.com/Expand-My-Business/go_windows_agent/instruction/operator"
-	"github.com/Expand-My-Business/go_windows_agent/netstat"
-	"github.com/Expand-My-Business/go_windows_agent/nmaprunv2"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/config"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/instruction/operator"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/netstat"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/nmaprunv2"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/windowslogs"
 	"github.com/Expand-My-Business/go_windows_agent/utils"
-	"github.com/Expand-My-Business/go_windows_agent/windowslogs"
 	"github.com/sirupsen/logrus"
 )
 
@@ -64,7 +64,8 @@ func GetInstructions() {
 
 		if ins.CompanyCode != cfg.CompanyCode {
 			logrus.Errorf("deployed company code %s didn't match with resp code %s", cfg.CompanyCode, ins.CompanyCode)
-			return
+			time.Sleep(pollPeriod)
+			continue
 		}
 
 		ip, _ := utils.GetPrivateIPAddress()

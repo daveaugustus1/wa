@@ -7,13 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/Expand-My-Business/go_windows_agent/config"
 	"github.com/Expand-My-Business/go_windows_agent/constants"
-	"github.com/Expand-My-Business/go_windows_agent/instruction"
-	"github.com/Expand-My-Business/go_windows_agent/netstat"
-	"github.com/Expand-My-Business/go_windows_agent/nmaprunv2"
-	"github.com/Expand-My-Business/go_windows_agent/windowsagent"
-	"github.com/Expand-My-Business/go_windows_agent/windowslogs"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/config"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/netstat"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/nmaprunv2"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/windowsagent"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/windowslogs"
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 )
@@ -228,12 +227,11 @@ func main() {
 
 	// Create a new service object and initialize it.
 	svcConfig := &service.Config{
-		Name:        "Agent Service",
-		DisplayName: "Agent Service",
-		Description: "My service description.",
+		Name:        "Go Agent Service",
+		DisplayName: "Go Agent Service",
+		Description: "Go Agent Service, sends system stats to APIs.",
 	}
 
-	go instruction.GetInstructions()
 	prg := &myService{}
 	svc, err := service.New(prg, svcConfig)
 	if err != nil {

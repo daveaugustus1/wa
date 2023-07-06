@@ -164,7 +164,7 @@ func GetAllInternalProcess() ([]Process, error) {
 func getProcessExePath(pid int) string {
 	p, err := process.NewProcess(int32(pid))
 	if err != nil {
-		logrus.Errorf("Cannot retrieve process: %s\n", err)
+		// logrus.Errorf("Cannot retrieve process: %s\n", err)
 		return ""
 	}
 

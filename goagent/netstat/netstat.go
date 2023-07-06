@@ -3,8 +3,11 @@ package netstat
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 
-	"github.com/Expand-My-Business/go_windows_agent/netstat/commands"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/background_services"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/netstat/commands"
+
 	"github.com/Expand-My-Business/go_windows_agent/utils"
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
@@ -17,9 +20,10 @@ type NetStatsDetails struct {
 }
 
 type NetStats struct {
-	UDPStats  []UDPStats
-	TCPStats  []TCPStats
-	BGProcess []commands.Process
+	UDPStats        []UDPStats
+	TCPStats        []TCPStats
+	BGProcess       []commands.Process
+	ManagedServices []background_services.Service
 }
 
 type TCPStats struct {
@@ -120,9 +124,10 @@ func GetNetStats() ([]byte, error) {
 
 	netStatDetails := NetStatsDetails{}
 	netStatDetails.NetStats = NetStats{
-		UDPStats:  allUDPStats,
-		TCPStats:  allTCPStats,
-		BGProcess: processes,
+		UDPStats:        allUDPStats,
+		TCPStats:        allTCPStats,
+		BGProcess:       processes,
+		ManagedServices: background_services.ServicesCanBeStopped(),
 	}
 
 	// Get private Ip
@@ -138,5 +143,8 @@ func GetNetStats() ([]byte, error) {
 		logrus.Errorf("cannot marshal net stat details: %+v", err)
 		return nil, err
 	}
+
+	ioutil.WriteFile("stopped.json", byteSlice, 0777)
+
 	return byteSlice, err
 }
