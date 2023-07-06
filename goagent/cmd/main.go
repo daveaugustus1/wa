@@ -3,17 +3,16 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
-	toml "github.com/pelletier/go-toml"
-
-	"github.com/Expand-My-Business/go_windows_agent/netstat"
-	"github.com/Expand-My-Business/go_windows_agent/nmap"
-	"github.com/Expand-My-Business/go_windows_agent/windowsagent"
-	"github.com/Expand-My-Business/go_windows_agent/windowslogs"
+	"github.com/Expand-My-Business/go_windows_agent/constants"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/config"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/netstat"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/nmaprunv2"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/windowsagent"
+	"github.com/Expand-My-Business/go_windows_agent/goagent/windowslogs"
 	"github.com/kardianos/service"
 	"github.com/sirupsen/logrus"
 )
@@ -38,7 +37,7 @@ func routineANmap(url string, output chan<- Message, done <-chan struct{}) {
 		case <-done:
 			return
 		default:
-			nmapXbyte, err := nmap.GetNmapDetails("127.0.0.1", "1-65000")
+			nmapXbyte, err := nmaprunv2.PortScannedReport()
 			if err != nil {
 				logrus.Errorf("cannot get nmap details, error: %+v", err)
 				output <- Message{
@@ -136,7 +135,6 @@ func sendStringToAPI(url string, data string) error {
 		logrus.Errorf("cannot make a request wrapper, error: %+v", err)
 		return err
 	}
-	logrus.Info("companycode: ", companyCode) // TODO: Remove this line
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("company-code", companyCode)
 
@@ -176,10 +174,10 @@ func (m *myService) run() {
 	output := make(chan Message)
 
 	// Start the goroutines
-	go routineANmap("http://13.235.66.99/agent_ports_data", output, nil)
-	go routineBWindows("http://13.235.66.99/add_agent_logs", output, nil)
-	go routineCNetStat("http://13.235.66.99/agent_process_data", output, nil)
-	go routineWinLogs("http://13.235.66.99/agent_system_logs_data", output, nil)
+	go routineANmap(constants.NmapURL, output, nil)
+	go routineBWindows(constants.WindowsSystemResourceURL, output, nil)
+	go routineCNetStat(constants.NetStatURL, output, nil)
+	go routineWinLogs(constants.WindowsLogURL, output, nil)
 
 	// Print the messages from the goroutines as they arrive
 	go func() {
@@ -199,22 +197,8 @@ func (m *myService) run() {
 }
 
 func init() {
-	// Read the TOML file
-	data, err := ioutil.ReadFile(`C:\Program Files\GoAgent\config\config.toml`)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		os.Exit(1)
-	}
-
-	// Parse the TOML data into a Config struct
-	var config Config
-	err = toml.Unmarshal(data, &config)
-	if err != nil {
-		fmt.Println("Error parsing TOML:", err)
-		os.Exit(1)
-	}
-
-	companyCode = config.Organization.Code
+	cfg := config.GetConfigInstance()
+	companyCode = cfg.CompanyCode
 }
 
 func main() {
@@ -243,9 +227,9 @@ func main() {
 
 	// Create a new service object and initialize it.
 	svcConfig := &service.Config{
-		Name:        "Agent Service",
-		DisplayName: "Agent Service",
-		Description: "My service description.",
+		Name:        "Go Agent Service",
+		DisplayName: "Go Agent Service",
+		Description: "Go Agent Service, sends system stats to APIs.",
 	}
 
 	prg := &myService{}

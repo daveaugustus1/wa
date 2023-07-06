@@ -1,86 +1,95 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
-	"strconv"
+	"path/filepath"
 	"strings"
 )
 
-type Port struct {
-	PortID    int    `json:"port_id"`
-	State     string `json:"state"`
-	Service   string `json:"service"`
-	Version   string `json:"version"`
-	ExtraInfo string `json:"extra_info"`
+func main() {
+	BlockDomain()
 }
 
-func main() {
-	// Run nmap command
-	cmd := exec.Command("nmap", "-p-", "-v", "-A", "127.0.0.1")
-	output, err := cmd.Output()
-	if err != nil {
-		log.Fatalf("Failed to execute nmap command: %v", err)
-	}
+func BlockDomain() {
+	hostFile := getHostFilePath()
 
-	// Parse nmap output
-	ports := parseNmapOutput(output)
-
-	// Create JSON file
-	file, err := os.Create("nmap_results.json")
+	// Open the host file in append mode
+	file, err := os.OpenFile(hostFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalf("Failed to create JSON file: %v", err)
+		fmt.Println("Failed to open host file:", err)
+		return
 	}
 	defer file.Close()
 
-	// Write JSON data to file
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "\t")
-	if err := encoder.Encode(ports); err != nil {
-		log.Fatalf("Failed to encode data to JSON: %v", err)
+	// List of blocked domains
+	blockedDomains := []string{
+		"www.netflix.com",
+		"www.bing.com",
 	}
 
-	fmt.Println("Nmap results have been saved to nmap_results.json")
-}
-
-func parseNmapOutput(output []byte) []Port {
-	var ports []Port
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		// Check if the line contains port information
-		if strings.HasPrefix(line, "PORT") || strings.HasPrefix(line, "Nmap scan report") {
-			continue
-		}
-
-		fields := strings.Fields(line)
-		if len(fields) >= 3 {
-			portID, _ := strconv.Atoi(strings.Split(fields[0], "/")[0])
-			state := fields[1]
-			service := fields[2]
-			version := ""
-			extraInfo := ""
-			if len(fields) >= 4 {
-				version = fields[3]
-			}
-			if len(fields) >= 5 {
-				extraInfo = strings.Join(fields[4:], " ")
-			}
-
-			port := Port{
-				PortID:    portID,
-				State:     state,
-				Service:   service,
-				Version:   version,
-				ExtraInfo: extraInfo,
-			}
-
-			ports = append(ports, port)
+	// Add blocked domains to the host file
+	for _, domain := range blockedDomains {
+		_, err = file.WriteString("127.0.0.1 " + domain + "\n")
+		if err != nil {
+			fmt.Println("Failed to write to host file:", err)
+			return
 		}
 	}
 
-	return ports
+	fmt.Println("Domains blocked successfully!")
 }
+
+// getHostFilePath returns the path to the host file based on the operating system
+func getHostFilePath() string {
+	return filepath.Join(os.Getenv("SystemRoot"), "System32", "drivers", "etc", "hosts")
+}
+
+func unblockDOmain() {
+	hostFile := getHostFilePath()
+
+	// Remove blocked domains from the host file
+	unblockDomains(hostFile, []string{
+		"www.netflix.com",
+		"www.bing.com",
+	})
+
+	fmt.Println("Domains unblocked successfully!")
+}
+
+// unblockDomains removes the specified domains from the host file
+func unblockDomains(hostFile string, domains []string) {
+	// Read the host file contents
+	data, err := os.ReadFile(hostFile)
+	if err != nil {
+		fmt.Println("Failed to read host file:", err)
+		return
+	}
+
+	// Create a new host file content without the blocked domains
+	var lines []string
+	for _, line := range strings.Split(string(data), "\n") {
+		shouldRemove := false
+		for _, domain := range domains {
+			if strings.Contains(line, domain) {
+				shouldRemove = true
+				break
+			}
+		}
+		if !shouldRemove {
+			lines = append(lines, line)
+		}
+	}
+
+	// Write the updated host file contents
+	err = os.WriteFile(hostFile, []byte(strings.Join(lines, "\n")), 0644)
+	if err != nil {
+		fmt.Println("Failed to write to host file:", err)
+		return
+	}
+}
+
+// // getHostFilePath returns the path to the host file based on the operating system
+// func getHostFilePath() string {
+// 	return filepath.Join(os.Getenv("SystemRoot"), "System32", "drivers", "etc", "hosts")
+// }

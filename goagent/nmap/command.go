@@ -60,11 +60,11 @@ func parseNmapOutput(output []byte) NmapStat {
 			portID, _ := strconv.Atoi(strings.Split(fields[0], "/")[0])
 			state := fields[1]
 			service := fields[2]
-			version := ""
+			version := "N/A"
 			extraInfo := ""
-			if len(fields) >= 4 {
-				version = fields[3]
-			}
+			// if len(fields) >= 4 {
+			// 	version = fields[3]
+			// }
 			if len(fields) >= 5 {
 				extraInfo = strings.Join(fields[4:], " ")
 			}

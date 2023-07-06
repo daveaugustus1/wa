@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 func GetPrivateIPAddress() (string, error) {
@@ -85,4 +88,26 @@ func GetGoAgenHash(binaryPath string) (string, error) {
 	hashString := hex.EncodeToString(hash[:])
 
 	return hashString, nil
+}
+
+func SendStringToAPI(url, data, companyCode string) error {
+	requestBody := bytes.NewBuffer([]byte(data))
+
+	req, err := http.NewRequest("POST", url, requestBody)
+	if err != nil {
+		logrus.Errorf("cannot make a request wrapper, error: %+v", err)
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("company-code", companyCode)
+
+	client := http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logrus.Errorf("cannot send a request, error: %+v", err)
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
 }

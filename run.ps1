@@ -23,32 +23,48 @@ if (-not (Test-Path -Path $destinationDir)) {
     New-Item -ItemType Directory -Path $destinationDir | Out-Null
 }
 
+$etcDir = "C:\Program Files\GoAgent\etc"
+# Create the etc directory if it doesn't exist
+if (-not (Test-Path -Path $etcDir)) {
+    New-Item -ItemType Directory -Path $etcDir | Out-Null
+}
+
 # Copy and overwrite the config.toml file
 Copy-Item -Path ".\config.toml" -Destination $destinationFile -Force
 
 Write-Host "config.toml has been moved to '$destinationFile'."
 
+
+# Create a 'bin' folder in C:\Program Files\GoAgent directory
+$binDir = "C:\Program Files\GoAgent\bin"
+New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+
+# Build main.go in the bin folder and rename it to agent.go
+$agentSourceFile = ".\goagent\cmd\main.go"
+$agentDestinationFile = "C:\Program Files\GoAgent\bin\agent.go"
+# go build -o $agentDestinationFile $agentSourceFile
+
+
 # Check if main.exe exists in the current directory
-if (Test-Path -Path ".\main.exe") {
+if (Test-Path -Path $agentDestinationFile) {
     # If it does, ask the user if they want to rebuild
-    $buildResponse = Read-Host "main.exe already exists. Do you want to rebuild? (y/n)"
+    $buildResponse = Read-Host "The exe file already exists. Do you want to rebuild? (y/n)"
     if ($buildResponse -eq "y" -or $buildResponse -eq "Y") {
         # If the user wants to rebuild, run the go build command
-        go build -o .\main.exe .\cmd\main.go
+        go build -o $agentDestinationFile $agentSourceFile
     } else {
         # If the user doesn't want to rebuild, skip the go build command
         Write-Host "Skipping build."
     }
 } else {
     # If main.exe doesn't exist, run the go build command
-    go build -o .\main.exe .\cmd\main.go
+    go build -o $agentDestinationFile $agentSourceFile
 }
 
 # Define variables
 $serviceName = "GoAgent"
 $displayName = "GoAgent"
 $description = "My custom service"
-$binaryPath = Join-Path $PSScriptRoot "main.exe"
 
 # Check if the service exists
 $existingService = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
@@ -65,8 +81,8 @@ if ($existingService) {
 }
 
 # The service does not exist, so create it
-Write-Host "Creating the '$displayName' service, pointing to executable '$binaryPath'"
-New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName $displayName -Description $description -StartupType Automatic
+Write-Host "Creating the '$displayName' service, pointing to executable '$agentDestinationFile'"
+New-Service -Name $serviceName -BinaryPathName $agentDestinationFile -DisplayName $displayName -Description $description -StartupType Automatic
 
 # Configure service recovery options
 $failureActions = @"

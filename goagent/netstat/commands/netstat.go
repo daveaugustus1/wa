@@ -164,13 +164,13 @@ func GetAllInternalProcess() ([]Process, error) {
 func getProcessExePath(pid int) string {
 	p, err := process.NewProcess(int32(pid))
 	if err != nil {
-		logrus.Errorf("Cannot retrieve process: %s\n", err)
+		// logrus.Errorf("Cannot retrieve process: %s\n", err)
 		return ""
 	}
 
 	exePath, err := p.Exe()
 	if err != nil {
-		logrus.Errorf("Cannot retrieve executable path: %s\n", err)
+		// logrus.Errorf("Cannot retrieve executable path: %s\n", err)
 		return ""
 	}
 
