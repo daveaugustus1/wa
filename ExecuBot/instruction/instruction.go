@@ -8,12 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Expand-My-Business/go_windows_agent/ExecuBot/instruction/operator"
 	"github.com/Expand-My-Business/go_windows_agent/constants"
 	"github.com/Expand-My-Business/go_windows_agent/goagent/config"
-	"github.com/Expand-My-Business/go_windows_agent/goagent/instruction/operator"
-	"github.com/Expand-My-Business/go_windows_agent/goagent/netstat"
-	"github.com/Expand-My-Business/go_windows_agent/goagent/nmaprunv2"
-	"github.com/Expand-My-Business/go_windows_agent/goagent/windowslogs"
 	"github.com/Expand-My-Business/go_windows_agent/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -157,115 +154,14 @@ func GetInstructions() {
 						// RespondExecutionDetails(cfg.InstructionRespEndpoint, v.ServiceName, ins.CompanyCode, "The service restarted successfully")
 					}
 				case constants.ScanService:
-					if v.ServiceName == "nmap" {
-						nmapXbyte, err := nmaprunv2.PortScannedReport()
-						if err != nil {
-							executionRes := InstructionResp{
-								ID:          v.Id,
-								Action:      constants.ScanService,
-								IsExecuted:  true,
-								Msg:         err.Error(),
-								ServiceName: v.ServiceName,
-								Status:      "failed",
-							}
-							executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-						} else {
-							// TODO: trigger response concurrently
-							if err := utils.SendStringToAPI(constants.NmapURL, string(nmapXbyte), cfg.CompanyCode); err != nil {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         err.Error(),
-									ServiceName: v.ServiceName,
-									Status:      "failed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							} else {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         "The service scanned successfully",
-									ServiceName: v.ServiceName,
-									Status:      "passed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							}
-						}
-					} else if v.ServiceName == "netstat" {
-						netXbyte, err := netstat.GetNetStats()
-						if err != nil {
-							executionRes := InstructionResp{
-								ID:          v.Id,
-								Action:      constants.ScanService,
-								IsExecuted:  true,
-								Msg:         err.Error(),
-								ServiceName: v.ServiceName,
-								Status:      "failed",
-							}
-							executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-						} else {
-							// TODO: trigger response concurrently
-							if err := utils.SendStringToAPI(constants.NetStatURL, string(netXbyte), cfg.CompanyCode); err != nil {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         err.Error(),
-									ServiceName: v.ServiceName,
-									Status:      "failed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							} else {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         "The service scanned successfully",
-									ServiceName: v.ServiceName,
-									Status:      "passed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							}
-						}
-					} else if v.ServiceName == "system-log" {
-						windoesLogs, err := windowslogs.GetSystemLogs()
-						if err != nil {
-							executionRes := InstructionResp{
-								ID:          v.Id,
-								Action:      constants.ScanService,
-								IsExecuted:  true,
-								Msg:         err.Error(),
-								ServiceName: v.ServiceName,
-								Status:      "failed",
-							}
-							executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-						} else {
-							// TODO: trigger response concurrently
-							if err := utils.SendStringToAPI(constants.WindowsLogURL, string(windoesLogs), cfg.CompanyCode); err != nil {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         err.Error(),
-									ServiceName: v.ServiceName,
-									Status:      "failed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							} else {
-								executionRes := InstructionResp{
-									ID:          v.Id,
-									Action:      constants.ScanService,
-									IsExecuted:  true,
-									Msg:         "The service scanned successfully",
-									ServiceName: v.ServiceName,
-									Status:      "passed",
-								}
-								executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes)
-							}
-						}
-					}
+					executionRes := scanOperation(v)
+					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
+				case constants.UNBlockDomain:
+					executionRes := blockDomain(v)
+					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
+				case constants.BlockDomain:
+					executionRes := unblockDomain(v)
+					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
 				default:
 					executionRes := InstructionResp{
 						ID:          v.Id,

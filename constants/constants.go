@@ -11,6 +11,8 @@ const (
 	RestartService = "restart"
 	RefreshService = "refresh"
 	ScanService    = "scan"
+	BlockDomain    = "block-domain"
+	UNBlockDomain  = "un-block-domain"
 )
 
 const (
