@@ -156,11 +156,11 @@ func GetInstructions() {
 				case constants.ScanService:
 					executionRes := scanOperation(v)
 					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
-				case constants.UNBlockDomain:
+				case constants.BlockDomain:
 					executionRes := blockDomain(v)
 					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
-				case constants.BlockDomain:
-					executionRes := unblockDomain(v)
+				case constants.UNBlockDomain:
+					executionRes := unblockDomains(v, []string{v.ServiceName})
 					executionResp.InstructionResps = append(executionResp.InstructionResps, executionRes...)
 				default:
 					executionRes := InstructionResp{

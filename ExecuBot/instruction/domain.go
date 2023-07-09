@@ -5,23 +5,34 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Expand-My-Business/go_windows_agent/constants"
+	"github.com/sirupsen/logrus"
 )
 
 func blockDomain(v Instruction) []InstructionResp {
-
-	executionResp := []InstructionResp{}
-
-	return executionResp
+	return BlockDomain(v, []string{v.ServiceName})
 }
 
-func BlockDomain(blockedDomains []string) {
+func BlockDomain(v Instruction, blockedDomains []string) []InstructionResp {
+	executionResp := []InstructionResp{}
+
 	hostFile := getHostFilePath()
 
 	// Open the host file in append mode
 	file, err := os.OpenFile(hostFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("Failed to open host file:", err)
-		return
+		logrus.Errorf("Failed to open host file: %v", err)
+		resp := InstructionResp{
+			Action:      constants.BlockDomain,
+			ID:          v.Id,
+			IsExecuted:  false,
+			ServiceName: v.ServiceName,
+			Status:      "failed",
+			Msg:         "",
+		}
+		executionResp = append(executionResp, resp)
+		return executionResp
 	}
 	defer file.Close()
 
@@ -35,12 +46,32 @@ func BlockDomain(blockedDomains []string) {
 	for _, domain := range blockedDomains {
 		_, err = file.WriteString("127.0.0.1 " + domain + "\n")
 		if err != nil {
-			fmt.Println("Failed to write to host file:", err)
-			return
+			logrus.Errorf("Failed to write to host file: %v", err)
+			resp := InstructionResp{
+				Action:      constants.BlockDomain,
+				ID:          v.Id,
+				IsExecuted:  false,
+				ServiceName: v.ServiceName,
+				Status:      "failed",
+				Msg:         fmt.Sprintf("%v domain couldn't be blocked", v.ServiceName),
+			}
+			executionResp = append(executionResp, resp)
+		} else {
+			resp := InstructionResp{
+				Action:      constants.BlockDomain,
+				ID:          v.Id,
+				IsExecuted:  true,
+				ServiceName: v.ServiceName,
+				Status:      "success",
+				Msg:         fmt.Sprintf("%v domain is blocked", v.ServiceName),
+			}
+			executionResp = append(executionResp, resp)
 		}
 	}
 
-	fmt.Println("Domains blocked successfully!")
+	logrus.Info("Domains blocked successfully!")
+
+	return executionResp
 }
 
 // getHostFilePath returns the path to the host file based on the operating system
@@ -55,25 +86,24 @@ func unblockDomain(v Instruction) []InstructionResp {
 	return executionResp
 }
 
-func unblockDOmain() {
-	hostFile := getHostFilePath()
-
-	// Remove blocked domains from the host file
-	unblockDomains(hostFile, []string{
-		"www.netflix.com",
-		"www.bing.com",
-	})
-
-	fmt.Println("Domains unblocked successfully!")
-}
-
 // unblockDomains removes the specified domains from the host file
-func unblockDomains(hostFile string, domains []string) {
+func unblockDomains(v Instruction, domains []string) []InstructionResp {
+	hostFile := getHostFilePath()
+	executionResp := []InstructionResp{}
+
 	// Read the host file contents
 	data, err := os.ReadFile(hostFile)
 	if err != nil {
-		fmt.Println("Failed to read host file:", err)
-		return
+		resp := InstructionResp{
+			Action:      constants.BlockDomain,
+			ID:          v.Id,
+			IsExecuted:  false,
+			ServiceName: v.ServiceName,
+			Status:      "failed",
+			Msg:         fmt.Sprintf("%v domain couldn't be blocked", v.ServiceName),
+		}
+		executionResp = append(executionResp, resp)
+		return executionResp
 	}
 
 	// Create a new host file content without the blocked domains
@@ -94,7 +124,27 @@ func unblockDomains(hostFile string, domains []string) {
 	// Write the updated host file contents
 	err = os.WriteFile(hostFile, []byte(strings.Join(lines, "\n")), 0644)
 	if err != nil {
-		fmt.Println("Failed to write to host file:", err)
-		return
+		resp := InstructionResp{
+			Action:      constants.BlockDomain,
+			ID:          v.Id,
+			IsExecuted:  false,
+			ServiceName: v.ServiceName,
+			Status:      "failed",
+			Msg:         fmt.Sprintf("%v domain couldn't be blocked", v.ServiceName),
+		}
+		executionResp = append(executionResp, resp)
+		return executionResp
+	} else {
+		resp := InstructionResp{
+			Action:      constants.BlockDomain,
+			ID:          v.Id,
+			IsExecuted:  true,
+			ServiceName: v.ServiceName,
+			Status:      "success",
+			Msg:         fmt.Sprintf("%v domain is blocked", v.ServiceName),
+		}
+		executionResp = append(executionResp, resp)
+		return executionResp
 	}
+
 }
